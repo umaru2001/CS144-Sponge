@@ -1,8 +1,12 @@
 *.a
 *.o
 /build
+/cmake-build-debug
+/cmake-build-release
 /.ccls-cache
 /.cache
+/.vscode
+/.idea
 CMakeCache.txt
 CMakeFiles
 Makefile
