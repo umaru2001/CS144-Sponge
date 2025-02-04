@@ -1,2 +1,15 @@
+*.a
+*.o
+.idea
+.vscode
+cmake-build-debug
+cmake-build-release
 /build
 /.ccls-cache
+/.cache
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
