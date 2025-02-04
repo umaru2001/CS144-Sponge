@@ -1,2 +1,8 @@
+# cmake build file
+/cmake-build-debug
+/cmake-build-release
 /build
 /.ccls-cache
+# IDEs
+/.idea
+/.vscode
