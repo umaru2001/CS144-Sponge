@@ -24,11 +24,11 @@ StreamReassembler::StreamReassembler(const size_t capacity)
 void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
     // 1. 首先计算 reassembler_stream 存储的开头和结尾 index。根据两边的 index 更新 reassembler_stream
     // 1.1 已经被 reassembled 的 index 就不必再重新 assemble 一遍
-    auto _start_index = max(index, this->_reassembled_index);
+    auto _start_index = max(index, this->_first_disassembled_index);
     // 1.2 大于 eof 的不必 assemble；大于 capacity 的不能 assemble
     // 根据上面两条规则，计算两边的 index
-    auto _index_of_remain_buffer_capacity = this->_reassembled_index + this->_capacity - this->_output.buffer_size();
-    // end 结尾不计算 eof，应该是当前 reassembled_index（已经读取到的 index）+ 剩余未进入 BufferStream 缓冲区的容量
+    auto _index_of_remain_buffer_capacity = this->_first_disassembled_index + this->_capacity - this->_output.buffer_size();
+    // end 结尾不计算 eof，应该是当前 first_disassembled_index（已经读取到的 index）+ 剩余未进入 BufferStream 缓冲区的容量
     auto _end_index = min(index + data.length(), min(_index_of_remain_buffer_capacity, this->_eof_index));
 
     // 2. 更新 eof
@@ -53,19 +53,19 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
 
     string _str;
 
-    // 3. 接下来需要处理已经在缓冲区的新元素，reassembled_index「一路向前」，直到碰到没有 assembled 的元素为止。
-    while (this->_reassembled_index < this->_eof_index && this->_reassembler_stream.at(this->_reassembled_index % this->_capacity).second) {
-        _str.push_back(this->_reassembler_stream.at(this->_reassembled_index % this->_capacity).first);
-        this->_reassembler_stream[this->_reassembled_index % this->_capacity] = {0, false};
-        this->_reassembled_index++;
+    // 3. 接下来需要处理已经在缓冲区的新元素，first_disassembled_index「一路向前」，直到碰到没有 assembled 的元素为止。
+    while (this->_first_disassembled_index < this->_eof_index && this->_reassembler_stream.at(this->_first_disassembled_index % this->_capacity).second) {
+        _str.push_back(this->_reassembler_stream.at(this->_first_disassembled_index % this->_capacity).first);
+        this->_reassembler_stream[this->_first_disassembled_index % this->_capacity] = {0, false};
+        this->_first_disassembled_index++;
         this->_disassembled_count--;
     }
 
     // 4. 当我们收集了一定的 _str 后，向 ByteStream 中写入这些字符串
     this->_output.write(_str);
 
-    // 5. 最后，如果 reassembled_index「追上了」eof_index，则表明当前当前读取完毕
-    if (this->_reassembled_index == this->_eof_index) {
+    // 5. 最后，如果 first_disassembled_index「追上了」eof_index，则表明当前当前读取完毕
+    if (this->_first_disassembled_index == this->_eof_index) {
         this->_eof = true;
         this->_output.end_input();
     }
@@ -75,4 +75,4 @@ size_t StreamReassembler::unassembled_bytes() const { return this->_disassembled
 
 bool StreamReassembler::empty() const { return this->unassembled_bytes() == 0; }
 
-size_t StreamReassembler::reassembled_index() const { return this->_reassembled_index; }
+size_t StreamReassembler::first_disassembled_index() const { return this->_first_disassembled_index; }

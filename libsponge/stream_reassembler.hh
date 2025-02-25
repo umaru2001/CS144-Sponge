@@ -18,7 +18,7 @@ class StreamReassembler {
     std::vector<std::pair<char, bool>> _reassembler_stream; //!< The current part of the reassembled byte stream
     bool _eof = false; //!< Eof
     size_t _eof_index = 0; //!< The index of Eof char
-    size_t _reassembled_index = 0; //!< The index of char reassembled
+    size_t _first_disassembled_index = 0; //!< The first index of char not yet reassembled
     size_t _disassembled_count = 0; //!< The count of char has not been reassembled
 
   public:
@@ -53,7 +53,7 @@ class StreamReassembler {
     //! \returns `true` if no substrings are waiting to be assembled
     bool empty() const;
 
-    size_t reassembled_index() const;
+    size_t first_disassembled_index() const;
 };
 
 #endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH

@@ -20,9 +20,11 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         return;
     }
 
-    auto absolute_seqno = unwrap(seg.header().seqno, this->_isn.value(), this->unassembled_bytes());
+    auto absolute_seqno = unwrap(seg.header().seqno, this->_isn.value(), this->_reassembler.first_disassembled_index());
 
-    // absolute_seqno 已经包含了一个 syn，因此需要 -1 才能得到正确的起始索引
+    // absolute_seqno（绝对序列号）已经包含了一个 syn，因此需要 -1 才能得到正确的起始索引
+    // 如果这个地方已经收到 fin 了，并且绝对序列号大于 fin，那么就要 -2
+    // 但我们实际上在绝对序列号大于 fin 的时候在 push_string 内部就会被抛弃掉，因此不必这么做，直接优化成 -1
     this->_reassembler.push_substring(seg.payload().copy(), absolute_seqno - 1, seg.header().fin);
     this->_update_ackno();
 }
@@ -33,11 +35,11 @@ size_t TCPReceiver::window_size() const { return this->_capacity - this->_reasse
 
 void TCPReceiver::_update_ackno() {
     if (this->stream_out().input_ended()) {
-        this->_ackno = wrap(this->_reassembler.reassembled_index() + 2, this->_isn.value());
+        this->_ackno = wrap(this->_reassembler.first_disassembled_index() + 2, this->_isn.value());
         return;
     }
 
     if (this->_isn.has_value()) {
-        this->_ackno = wrap(this->_reassembler.reassembled_index() + 1, this->_isn.value());
+        this->_ackno = wrap(this->_reassembler.first_disassembled_index() + 1, this->_isn.value());
     }
 }

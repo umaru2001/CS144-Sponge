@@ -4,6 +4,7 @@
 #include "byte_stream.hh"
 #include "tcp_config.hh"
 #include "tcp_segment.hh"
+#include "tcp_sender_timer.hh"
 #include "wrapping_integers.hh"
 
 #include <functional>
@@ -23,6 +24,9 @@ class TCPSender {
     //! outbound queue of segments that the TCPSender wants sent
     std::queue<TCPSegment> _segments_out{};
 
+    //! 已经发出但还未收到 ACK 确认的 TCPSegment 队列
+    std::queue<std::pair<uint64_t, TCPSegment> > _outstanding_seg{};
+
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
 
@@ -31,6 +35,24 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    //! the (absolute) sequence number has been sent
+    uint64_t _acked_seqno{0};
+
+    //! 超时重传次数
+    uint32_t _consecutive_retransmissions_count{0};
+
+    //! 窗口大小，根据文档初始值应为 1
+    uint16_t _window_size{1};
+
+    //! 是否发送了 fin 的标志位
+    bool _has_set_fin_flag{false};
+
+    //! 是否发送了 syn 的标志位
+    bool _has_set_syn_flag{false};
+
+    //! timer
+    TCPSenderTimer _timer;
 
   public:
     //! Initialize a TCPSender
@@ -87,6 +109,8 @@ class TCPSender {
     //! \brief relative seqno for the next byte to be sent
     WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
     //!@}
+
+    [[nodiscard]] bool stream_error() const { return this->_stream.error(); }
 };
 
 #endif  // SPONGE_LIBSPONGE_TCP_SENDER_HH
