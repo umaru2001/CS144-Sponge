@@ -21,6 +21,12 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
+    bool _active{true};
+
+    size_t _last_segment_received_timestamp{0};
+
+    size_t _now_timestamp{0};
+
   public:
     //! \name "Input" interface for the writer
     //!@{
@@ -79,6 +85,14 @@ class TCPConnection {
     //! after both streams have finished (e.g. to ACK retransmissions from the peer)
     bool active() const;
     //!@}
+
+    void send_rst_segment();
+
+    void close();
+
+    size_t send_segment_from_sender_with_ack();
+
+    bool check_all_data_ready() const;
 
     //! Construct a new connection from a configuration
     explicit TCPConnection(const TCPConfig &cfg) : _cfg{cfg} {}

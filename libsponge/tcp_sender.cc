@@ -162,3 +162,11 @@ void TCPSender::send_empty_segment() {
     empty_segment.header().seqno = this->next_seqno();
     this->_segments_out.push(empty_segment);
 }
+
+bool TCPSender::all_data_ready() const { return this->stream_in().input_ended() && this->_outstanding_seg.empty(); }
+
+bool TCPSender::has_sent_syn() const { return this->_has_set_syn_flag; }
+
+bool TCPSender::has_sent_fin() const { return this->_has_set_fin_flag; }
+
+size_t TCPSender::stream_buffer() const { return this->stream_in().buffer_size(); }

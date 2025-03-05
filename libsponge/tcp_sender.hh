@@ -110,6 +110,14 @@ class TCPSender {
     WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
     //!@}
 
+    bool has_sent_syn() const;
+
+    bool has_sent_fin() const;
+
+    bool all_data_ready() const;
+
+    size_t stream_buffer() const;
+
     [[nodiscard]] bool stream_error() const { return this->_stream.error(); }
 };
 
